@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ScopeGuard">
+      <UniqueIdentifier>{1f69cc8e-6325-4236-b283-63d115450c17}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Crc32">
+      <UniqueIdentifier>{b9ff5c0d-de66-48d7-b29b-5b0560bf46c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Watcher">
+      <UniqueIdentifier>{183ea957-52e5-446c-a128-2deb5609f51b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_Main">
+      <UniqueIdentifier>{c09bac44-1507-4b18-9ad3-54f8b05ae462}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="scope_guard.h">
+      <Filter>ScopeGuard</Filter>
+    </ClInclude>
+    <ClInclude Include="crc32.h">
+      <Filter>Crc32</Filter>
+    </ClInclude>
+    <ClInclude Include="watcher.h">
+      <Filter>Watcher</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="crc32.cpp">
+      <Filter>Crc32</Filter>
+    </ClCompile>
+    <ClCompile Include="watcher.cpp">
+      <Filter>Watcher</Filter>
+    </ClCompile>
+    <ClCompile Include="ini.cpp">
+      <Filter>_Main</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
