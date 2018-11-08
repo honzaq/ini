@@ -8,30 +8,30 @@
 
 #include "registrator_intf.h"
 
-namespace ini
+namespace registration
 {
 
 /*
-	RegistrationToken class keeps a callback registered in a RegistrationHolder instance registered until you either destroy
-	this object or call the Unregister method manually. Registrations are reference-counted, therefore you can copy tokens
-	around and the registration is valid as long as at least one token is alive.
-*/
+ *	RegistrationToken class keeps a callback registered in a registration_holder instance registered until you either destroy
+ *	this object or call the unsubscribe method manually. Registrations are reference-counted, therefore you can copy tokens
+ *	around and the registration is valid as long as at least one token is alive.
+ */
 
-class registration_token : public registrator_intf
+class token : public registrator_intf
 {
 public:
-	registration_token() : m_notify_mutex(nullptr) {};
+	token() : m_notify_mutex(nullptr) {};
 
-	registration_token(std::shared_ptr<void> registration_smptr, std::recursive_mutex * notify_mutex)
+	token(std::shared_ptr<void> registration_smptr, std::recursive_mutex * notify_mutex)
 		: m_registration_holder(std::move(registration_smptr)), m_notify_mutex(notify_mutex)
 	{}
 
-	~registration_token()
+	~token()
 	{
-		unregister();
+		unsubscribe();
 	}
 
-	void unregister() override
+	void unsubscribe() override
 	{
 		std::unique_lock<std::recursive_mutex> notifylock;
 		if (m_notify_mutex) {
@@ -49,45 +49,45 @@ private:
 };
 
 /*
-	RegistrationHolder class implements holder for callback registrations. You can register arbitrary functors as callbacks:
+	registration_holder class implements holder for callback registrations. You can register arbitrary functors as callbacks:
 
-	RegistrationHolder<> regholder;
+	registration_holder<> regholder;
 	int a = 0;
-	RegistrationToken token1 = regholder.Register([&a] {
+	RegistrationToken token1 = regholder.subscribe([&a] {
 		++a;
 	});
-	RegistrationToken token2 = regholder.Register([] {
+	RegistrationToken token2 = regholder.subscribe([] {
 		dispatcher.sendmsg("it happened!");
 	});
 
 	and after some time you can notify all registered handlers:
 
-	regholder.NotifyAll();
+	regholder.notify_all();
 
-	which calls all registered callbacks consecutively. If you wish to unregister you callback, simply destroy the token you recieved from Register() or call token's Unregister method:
+	which calls all registered callbacks consecutively. If you wish to unregister you callback, simply destroy the token you recieved from subscribe() or call token's unsubscribe method:
 
-	token1.Unregister();
+	token1.unsubscribe();
 
-	after returning from Unregister() you are guaranteed the callback wont be called any more. If any callback throws an exception, any other callback won't be called and the exception will propagate from NotifyAll().
-	Your callbacks may also have parameters (how many you wish), in that case use template arguments to the RegistrationHolder class:
+	after returning from unsubscribe() you are guaranteed the callback wont be called any more. If any callback throws an exception, any other callback won't be called and the exception will propagate from notify_all().
+	Your callbacks may also have parameters (how many you wish), in that case use template arguments to the registration_holder class:
 
 	enum EventType {
 		msg_arrived,
 		connection_closed
 	};
-	RegistrationHolder<EventType> regholder;
-	auto token = regholder.Register([] (EventType type) {
+	registration_holder<EventType> regholder;
+	auto token = regholder.subscribe([] (EventType type) {
 		if (type == msg_arrived)
 			do_stuff();
 		else
 			do_some_other_stuff();
 	});
 	...
-	regholder.NotifyAll(msg_arrived);
+	regholder.notify_all(msg_arrived);
 
 	If you need to perform some action when your callback is being unregistered, use the optional 'unregister handler' parameter:
 
-	auto token = regholder.Register(
+	auto token = regholder.subscribe(
 		[] {
 			... callback body ...
 		},
@@ -96,23 +96,23 @@ private:
 		}
 	);
 
-	All operations over RegistrationHolder are thread-safe and callback are never executed concurrently.
+	All operations over registration_holder are thread-safe and callback are never executed concurrently.
 	You can also register and unregister callbacks from callback body. Usually you want to do this when you need a callback to unregister itself:
 
-	RegistrationHolder<MyClass &> regholder;
+	registration_holder<MyClass &> regholder;
 	MyClass myclass;
-	myclass.token = regholder.Register([&myclass](int event_type){
+	myclass.token = regholder.subscribe([&myclass](int event_type){
 		if (event_type == 123)
-			myclass.token.Unregister();
+			myclass.token.unsubscribe();
 	});
 
 	NOTE: There is one peculiarity in unregistering callback from itself - in the standard case, the callback object is destroyed right before
-	returning from Unregister(). If a callback unregisters itself, the callback object lives until its last execution finishes.
+	returning from unsubscribe(). If a callback unregisters itself, the callback object lives until its last execution finishes.
 
 	--------------------------------------------------------------------------
 	HOW TO REGISTER CBK FUNCTION WITH RETURN TYPE:
 
-	reg_holder<bool, int> regholder;
+	registration::holder<bool, int> regholder;
 	class MyClass {
 		bool on_event(int type) {
 			if (type == 0) {
@@ -122,8 +122,8 @@ private:
 		}
 	}
 	MyClass myclass;
-	myclass.token = regholder.Register([&myclass](int type){
-		myclass.on_event(type);
+	myclass.token = regholder.subscribe([&myclass](int type){
+		return myclass.on_event(type);
 	});
 
 	...
@@ -134,15 +134,15 @@ private:
 */
 
 template <typename TReturnType, typename ... CallbackArguments>
-class reg_holder
+class holder
 {
 public:
-	std::shared_ptr<registrator_intf> Register(std::function<TReturnType(CallbackArguments...)> callback)
+	std::shared_ptr<registrator_intf> subscribe(std::function<TReturnType(CallbackArguments...)> callback)
 	{
 		return register_impl(std::move(callback), std::function<void()>());
 	}
 
-	std::shared_ptr<registrator_intf> Register(std::function<TReturnType(CallbackArguments...)> callback, std::function<void()> endhandler)
+	std::shared_ptr<registrator_intf> subscribe(std::function<TReturnType(CallbackArguments...)> callback, std::function<void()> endhandler)
 	{
 		return register_impl(std::move(callback), std::move(endhandler));
 	}
@@ -159,15 +159,15 @@ public:
 		return notify_all_impl2(std::forward<Args>(args)...);
 	}
 
-    bool isEmpty() 
+    bool is_empty() 
 	{
 		std::lock_guard<std::mutex> regslock(m_registrations_lock);
 		return m_registrations.empty();
 	}
     
-	reg_holder() = default;
-	reg_holder(reg_holder &&) = default;
-	reg_holder & operator=(reg_holder &&) = default;
+	holder() = default;
+	holder(holder &&) = default;
+	holder & operator=(holder &&) = default;
 	
 private:
 
@@ -183,7 +183,7 @@ private:
 		std::function<void()> m_endhandler;
 	};
 
-	std::shared_ptr<registration_token> register_impl(std::function<TReturnType(CallbackArguments...)> && callback, std::function<void()> && endhandler)
+	std::shared_ptr<registration::token> register_impl(std::function<TReturnType(CallbackArguments...)> && callback, std::function<void()> && endhandler)
 	{
 		std::unique_lock<std::mutex> regslock(m_registrations_lock);
 
@@ -192,15 +192,15 @@ private:
 		auto p = std::shared_ptr<registration_entry>(
 			new registration_entry(std::move(callback), std::move(endhandler)),
 			[](registration_entry * p) {
-			if (p->m_endhandler) {
-				p->m_endhandler();
+				if (p->m_endhandler) {
+					p->m_endhandler();
+				}
+				delete p;
 			}
-			delete p;
-		}
 		);
 
 		m_registrations.emplace_back(p);
-		return std::make_shared<registration_token>(std::move(p), &m_notification_lock);
+		return std::make_shared<registration::token>(std::move(p), &m_notification_lock);
 	}
 
 	template <typename ... Args, typename = std::enable_if<std::is_void<TReturnType>::value>>
@@ -263,14 +263,13 @@ private:
 		return regslock;
 	}
 
+	std::mutex                                   m_registrations_lock;
+	std::recursive_mutex                         m_notification_lock;
 	std::list<std::weak_ptr<registration_entry>> m_registrations;
-
-	std::mutex m_registrations_lock;
-	std::recursive_mutex m_notification_lock;
 };
 
 
 template <typename ... CallbackArguments>
-using registration_holder = reg_holder<void, CallbackArguments...>;
+using holder_void = holder<void, CallbackArguments...>;
 
-} // end of namespace ini
+} // end of namespace registration

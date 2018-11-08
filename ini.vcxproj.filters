@@ -13,6 +13,12 @@
     <Filter Include="_Main">
       <UniqueIdentifier>{c09bac44-1507-4b18-9ad3-54f8b05ae462}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Registrator">
+      <UniqueIdentifier>{de267f74-a2c0-4c7c-a7e2-e7a242b17a29}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FileWatcher">
+      <UniqueIdentifier>{691fd1e2-c2cd-475d-ba4e-30aa18606494}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="scope_guard.h">
@@ -24,6 +30,18 @@
     <ClInclude Include="watcher.h">
       <Filter>Watcher</Filter>
     </ClInclude>
+    <ClInclude Include="registrator_intf.h">
+      <Filter>Registrator</Filter>
+    </ClInclude>
+    <ClInclude Include="file_watcher_intf.h">
+      <Filter>FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="file_watcher.h">
+      <Filter>FileWatcher</Filter>
+    </ClInclude>
+    <ClInclude Include="registration_holder.h">
+      <Filter>Registrator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crc32.cpp">
@@ -34,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="ini.cpp">
       <Filter>_Main</Filter>
+    </ClCompile>
+    <ClCompile Include="file_watcher.cpp">
+      <Filter>FileWatcher</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

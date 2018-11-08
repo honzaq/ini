@@ -1,11 +1,11 @@
 #pragma once
 
-namespace ini {
+namespace registration {
 
 /* */
 class registrator_intf {
 public:
-	virtual void unregister() = 0;
+	virtual void unsubscribe() = 0;
 };
 
-} // end of namespace ini
+} // end of namespace registration

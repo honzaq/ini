@@ -156,11 +156,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="crc32.h" />
+    <ClInclude Include="file_watcher.h" />
+    <ClInclude Include="file_watcher_intf.h" />
+    <ClInclude Include="registration_holder.h" />
+    <ClInclude Include="registrator_intf.h" />
     <ClInclude Include="scope_guard.h" />
     <ClInclude Include="watcher.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="crc32.cpp" />
+    <ClCompile Include="file_watcher.cpp" />
     <ClCompile Include="ini.cpp" />
     <ClCompile Include="watcher.cpp" />
   </ItemGroup>
